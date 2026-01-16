@@ -1,1 +1,0 @@
-// Function to talk to Google Gemini AI

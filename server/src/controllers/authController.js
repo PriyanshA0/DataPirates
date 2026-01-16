@@ -14,6 +14,13 @@ const generateToken = (userId) => {
 /**
  * REGISTER (auto-login)
  */
+
+export const loginOnBrowser = async (req, res) => {
+  const token = jwt.sign({ id: "696a7345462981e10c834102" }, process.env.JWT_SECRET);
+  res.cookie("token", token, { httpOnly: true });
+  res.send("Logged in");
+}
+
 export const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;

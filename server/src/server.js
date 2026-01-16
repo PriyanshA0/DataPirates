@@ -12,7 +12,8 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import medicalRoutes from "./routes/medicalRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
 import gamificationRoutes from "./routes/gamificationRoutes.js";
-
+import stravaRoutes from "./routes/stravaRoutes.js";
+import aiRoutes from "./routes/aiRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -44,6 +45,14 @@ app.use("/api/medical", medicalRoutes);
 app.use("/api/analytics", analyticsRoutes);
 
 app.use("/api/gamification", gamificationRoutes);
+
+app.use("/api/strava", stravaRoutes);
+
+app.use("/api/ai", aiRoutes);
+
+
+
+
 
 
 // app.use('/api/v1/health', healthRoutes);

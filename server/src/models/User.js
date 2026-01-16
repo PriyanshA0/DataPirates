@@ -13,6 +13,13 @@ const userSchema = new mongoose.Schema(
       lowercase: true
     },
 
+    strava: {
+      accessToken: String,
+      refreshToken: String,
+      expiresAt: Number
+    },
+
+
     password: { type: String, required: true },
 
     age: Number,
