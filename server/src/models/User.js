@@ -1,0 +1,1 @@
+// User profile, goals, badge array

@@ -1,0 +1,1 @@
+// Multer config (for Food/Medical images)
