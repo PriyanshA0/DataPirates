@@ -14,6 +14,7 @@ import analyticsRoutes from "./routes/analyticsRoutes.js";
 import gamificationRoutes from "./routes/gamificationRoutes.js";
 import stravaRoutes from "./routes/stravaRoutes.js";
 import aiRoutes from "./routes/aiRoutes.js";
+import historyRoutes from "./routes/historyRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -50,6 +51,7 @@ app.use("/api/strava", stravaRoutes);
 
 app.use("/api/ai", aiRoutes);
 
+app.use("/api/history", historyRoutes);
 
 
 

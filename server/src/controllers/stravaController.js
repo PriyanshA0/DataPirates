@@ -3,6 +3,7 @@ import User from "../models/User.js";
 import Workout from "../models/Workout.js";
 import DailyHealthLog from "../models/DailyHealthLog.js";
 import Activity from "../models/Activity.js";
+import { ensureValidStravaToken } from "../utils/refreshStravaToken.js";
 
 
 export const connectStrava = (req, res) => {
@@ -59,26 +60,145 @@ export const stravaCallback = async (req, res) => {
 // import DailyHealthLog from "../models/DailyHealthLog.js";
 // import User from "../models/User.js";
 
+// export const syncStravaActivities = async (req, res) => {
+//   try {
+//     const user = await User.findById(req.user.id);
+
+//     if (!user?.strava?.accessToken) {
+//       return res.status(400).json({ message: "Strava not connected" });
+//     }
+
+//     const response = await axios.get(
+//       "https://www.strava.com/api/v3/athlete/activities",
+//       {
+//         headers: {
+//           Authorization: `Bearer ${user.strava.accessToken}`,
+//         },
+//         params: { per_page: 50 },
+//       }
+//     );
+
+//     const activities = response.data;
+
+//     console.log(activities);
+    
+//     const dailyMap = {};
+
+//     for (const act of activities) {
+//       const date = act.start_date_local.split("T")[0];
+//       const durationMin = act.moving_time / 60;
+//       const distanceKm = act.distance ? act.distance / 1000 : 0;
+
+//       // MET values
+//       let MET = 3; // default yoga
+//       if (["Run"].includes(act.type)) MET = 8;
+//       if (["Walk", "Hike"].includes(act.type)) MET = 3.5;
+//       if (["Ride"].includes(act.type)) MET = 6;
+
+//       const weightKg = 70; // hackathon default
+//       const calories = Math.round(MET * weightKg * (durationMin / 60));
+
+//       const steps =
+//         act.type === "Run" || act.type === "Walk"
+//           ? Math.round(distanceKm * 1312) // steps per km
+//           : 0;
+
+//       if (!dailyMap[date]) {
+//         dailyMap[date] = {
+//           steps: 0,
+//           distance: 0,
+//           caloriesBurned: 0,
+//           heartRateSum: 0,
+//           hrCount: 0,
+//         };
+//       }
+
+//       dailyMap[date].steps += steps;
+//       dailyMap[date].distance += distanceKm;
+//       dailyMap[date].caloriesBurned += calories;
+
+//       if (typeof act.average_heartrate === "number") {
+//         dailyMap[date].heartRateSum += act.average_heartrate;
+//         dailyMap[date].hrCount += 1;
+//         }
+
+
+//       // Save raw activity
+//       await Activity.findOneAndUpdate(
+//         { stravaActivityId: act.id },
+//         {
+//           userId: req.user.id,
+//           source: "strava",
+//           stravaActivityId: act.id,
+//           type: act.type,
+//           durationMin: Math.round(durationMin),
+//           avgHeartRate: act.average_heartrate || null,
+//           maxHeartRate: act.max_heartrate || null,
+//           caloriesBurned: calories,
+//           distance: distanceKm || 0,
+//           steps,
+//           startTime: act.start_date,
+//         },
+//         { upsert: true }
+//       );
+//     }
+
+//     // Save DailyHealthLog
+//     for (const date in dailyMap) {
+//       const d = dailyMap[date];
+//       await DailyHealthLog.findOneAndUpdate(
+//         { userId: req.user.id, date },
+//         {
+//           steps: d.steps,
+//           distance: Number(d.distance.toFixed(2)),
+//           caloriesBurned: d.caloriesBurned,
+//           avgHeartRate:
+//                 d.hrCount > 0
+//                 ? Math.round(d.heartRateSum / d.hrCount)
+//                 : undefined,
+
+//           source: "strava",
+//         },
+//         { upsert: true }
+//       );
+//     }
+
+//     res.json({
+//       message: "Strava activities synced correctly",
+//       days: Object.keys(dailyMap).length,
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: "Strava sync failed" });
+//   }
+// };
+
+
 export const syncStravaActivities = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
 
-    if (!user?.strava?.accessToken) {
+    if (!user?.strava?.refreshToken) {
       return res.status(400).json({ message: "Strava not connected" });
     }
 
+    // ✅ ENSURE TOKEN IS VALID
+    const accessToken = await ensureValidStravaToken(user);
+
+    // ✅ NOW CALL STRAVA
     const response = await axios.get(
       "https://www.strava.com/api/v3/athlete/activities",
       {
         headers: {
-          Authorization: `Bearer ${user.strava.accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         params: { per_page: 50 },
       }
     );
 
     const activities = response.data;
-
+    console.log(activities);
+    
     const dailyMap = {};
 
     for (const act of activities) {
@@ -86,18 +206,15 @@ export const syncStravaActivities = async (req, res) => {
       const durationMin = act.moving_time / 60;
       const distanceKm = act.distance ? act.distance / 1000 : 0;
 
-      // MET values
-      let MET = 3; // default yoga
-      if (["Run"].includes(act.type)) MET = 8;
+      let MET = 3;
+      if (act.type === "Run") MET = 8;
       if (["Walk", "Hike"].includes(act.type)) MET = 3.5;
-      if (["Ride"].includes(act.type)) MET = 6;
+      if (act.type === "Ride") MET = 6;
 
-      const weightKg = 70; // hackathon default
-      const calories = Math.round(MET * weightKg * (durationMin / 60));
-
+      const calories = Math.round(MET * 70 * (durationMin / 60));
       const steps =
         act.type === "Run" || act.type === "Walk"
-          ? Math.round(distanceKm * 1312) // steps per km
+          ? Math.round(distanceKm * 1312)
           : 0;
 
       if (!dailyMap[date]) {
@@ -105,7 +222,7 @@ export const syncStravaActivities = async (req, res) => {
           steps: 0,
           distance: 0,
           caloriesBurned: 0,
-          heartRateSum: 0,
+          hrSum: 0,
           hrCount: 0,
         };
       }
@@ -114,24 +231,26 @@ export const syncStravaActivities = async (req, res) => {
       dailyMap[date].distance += distanceKm;
       dailyMap[date].caloriesBurned += calories;
 
-      if (act.average_heartrate) {
-        dailyMap[date].heartRateSum += act.average_heartrate;
-        dailyMap[date].hrCount += 1;
+      if (typeof act.average_heartrate === "number") {
+        dailyMap[date].hrSum += act.average_heartrate;
+        dailyMap[date].hrCount++;
       }
 
-      // Save raw activity
+
+
+      // Save activity
       await Activity.findOneAndUpdate(
         { stravaActivityId: act.id },
         {
-          userId: req.user.id,
+          userId: user._id,
           source: "strava",
           stravaActivityId: act.id,
           type: act.type,
           durationMin: Math.round(durationMin),
-          avgHeartRate: act.average_heartrate || null,
-          maxHeartRate: act.max_heartrate || null,
-          calories,
-          distance: distanceKm || 0,
+          avgHeartRate: act.average_heartrate ?? null,
+          maxHeartRate: act.max_heartrate ?? null,
+          caloriesBurned: calories,
+          distance: distanceKm,
           steps,
           startTime: act.start_date,
         },
@@ -142,14 +261,15 @@ export const syncStravaActivities = async (req, res) => {
     // Save DailyHealthLog
     for (const date in dailyMap) {
       const d = dailyMap[date];
+
       await DailyHealthLog.findOneAndUpdate(
-        { userId: req.user.id, date },
+        { userId: user._id, date },
         {
           steps: d.steps,
           distance: Number(d.distance.toFixed(2)),
           caloriesBurned: d.caloriesBurned,
           avgHeartRate:
-            d.hrCount > 0 ? Math.round(d.heartRateSum / d.hrCount) : null,
+            d.hrCount > 0 ? Math.round(d.hrSum / d.hrCount) : null,
           source: "strava",
         },
         { upsert: true }
@@ -157,11 +277,11 @@ export const syncStravaActivities = async (req, res) => {
     }
 
     res.json({
-      message: "Strava activities synced correctly",
+      message: "Strava synced successfully",
       days: Object.keys(dailyMap).length,
     });
   } catch (err) {
-    console.error(err);
+    console.error(err.response?.data || err.message);
     res.status(500).json({ message: "Strava sync failed" });
   }
 };
