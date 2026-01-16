@@ -3,10 +3,16 @@ import dotenv from "dotenv"
 import cors from "cors"
 import cookieParser from "cookie-parser";
 
-
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js"
 import healthRoutes from "./routes/healthRoutes.js"
+import workoutRoutes from "./routes/workoutRoutes.js"
+import goalRoutes from "./routes/goalRoutes.js"
+import notificationRoutes from "./routes/notificationRoutes.js";
+import medicalRoutes from "./routes/medicalRoutes.js";
+import analyticsRoutes from "./routes/analyticsRoutes.js";
+import gamificationRoutes from "./routes/gamificationRoutes.js";
+
 
 dotenv.config();
 const app = express();
@@ -26,6 +32,18 @@ app.get("/", (req, res) => {res.send("Hi there this is the / route of datapirate
 app.use("/api/auth", authRoutes);
 
 app.use("/api/health", healthRoutes);
+
+app.use("/api/workouts", workoutRoutes);
+
+app.use("/api/goals", goalRoutes);
+
+app.use("/api/notifications", notificationRoutes);
+
+app.use("/api/medical", medicalRoutes);
+
+app.use("/api/analytics", analyticsRoutes);
+
+app.use("/api/gamification", gamificationRoutes);
 
 
 // app.use('/api/v1/health', healthRoutes);
