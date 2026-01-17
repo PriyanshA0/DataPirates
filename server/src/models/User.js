@@ -27,6 +27,7 @@ const userSchema = new mongoose.Schema(
 
     height: Number, // cm
     weight: Number, // kg
+    mobile: String, // phone number
 
     role: { type: String, default: "user" }
   },

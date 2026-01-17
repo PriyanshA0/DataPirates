@@ -105,6 +105,71 @@ export const login = async (req, res) => {
   }
 };
 
+/**
+ * GET USER PROFILE
+ */
+export const getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      age: user.age,
+      gender: user.gender,
+      height: user.height,
+      weight: user.weight
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/**
+ * UPDATE USER PROFILE
+ */
+export const updateProfile = async (req, res) => {
+  try {
+    const { name, age, gender, height, weight, mobile } = req.body;
+    
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (age) updateData.age = age;
+    if (gender) updateData.gender = gender;
+    if (height) updateData.height = height;
+    if (weight) updateData.weight = weight;
+    if (mobile) updateData.mobile = mobile;
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      updateData,
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "Profile updated successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        age: user.age,
+        gender: user.gender,
+        height: user.height,
+        weight: user.weight,
+        mobile: user.mobile
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 /**
  * LOGOUT (MVP)
