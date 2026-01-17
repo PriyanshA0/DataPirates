@@ -1,13 +1,20 @@
 import GamificationProfile from "../models/GamificationProfile.js";
 import DailyHealthLog from "../models/DailyHealthLog.js";
 
+/**
+ * GET PROFILE
+ */
 export const getGamificationProfile = async (req, res) => {
   try {
     const userId = req.user.id;
 
     let profile = await GamificationProfile.findOne({ userId });
+
     if (!profile) {
-      profile = await GamificationProfile.create({ userId });
+      profile = await GamificationProfile.create({
+        userId,
+        lastUpdatedDate: new Date().toISOString().split("T")[0]
+      });
     }
 
     res.json(profile);
@@ -16,65 +23,94 @@ export const getGamificationProfile = async (req, res) => {
   }
 };
 
+/**
+ * SYNC DAILY POINTS
+ */
 export const syncGamification = async (req, res) => {
   try {
     const userId = req.user.id;
     const today = new Date().toISOString().split("T")[0];
 
     let profile = await GamificationProfile.findOne({ userId });
+
     if (!profile) {
-      profile = await GamificationProfile.create({ userId });
+      profile = await GamificationProfile.create({
+        userId,
+        lastUpdatedDate: today
+      });
+    }
+
+    // 🔄 Reset daily points if new day
+    if (profile.lastUpdatedDate !== today) {
+      profile.dailyPoints = 0;
+      profile.lastUpdatedDate = today;
     }
 
     const todayLog = await DailyHealthLog.findOne({ userId, date: today });
     if (!todayLog) {
-      return res.json({ message: "No health activity today" });
+      return res.json({ message: "No activity today" });
     }
 
-    let pointsToAdd = 0;
+    let points = 0;
 
-    // 1️⃣ Daily sync bonus
-    pointsToAdd += 10;
+    // 🟢 Base
+    points += 10;
 
-    // 2️⃣ Steps bonus
-    if (todayLog.steps >= 8000) {
-      pointsToAdd += 20;
-    }
+    // 🚶 Steps
+    if (todayLog.steps >= 8000) points += 20;
+    if (todayLog.steps >= 12000) points += 10;
 
-    // 3️⃣ 7‑day activity streak
-    const last7Logs = await DailyHealthLog.find({
-      userId,
-      date: { $lte: today }
-    })
-      .sort({ date: -1 })
-      .limit(7);
+    // 🔥 Calories
+    if (todayLog.caloriesBurned >= 400) points += 20;
 
-    if (last7Logs.length === 7) {
-      pointsToAdd += 50;
-    }
+    // 😴 Sleep
+    if (todayLog.sleep?.duration >= 7) points += 20;
 
-    profile.points += pointsToAdd;
+    profile.dailyPoints += points;
+    profile.points += points;
     profile.level = Math.floor(profile.points / 100) + 1;
 
     await profile.save();
 
     res.json({
       message: "Gamification synced",
-      pointsAdded: pointsToAdd,
-      profile
+      dailyPoints: profile.dailyPoints,
+      totalPoints: profile.points,
+      level: profile.level
     });
   } catch (err) {
     res.status(500).json({ message: "Gamification sync failed" });
   }
 };
 
+/**
+ * TODAY LEADERBOARD (FIXED)
+ */
+export const getTodayLeaderboard = async (req, res) => {
+  try {
+    const leaderboard = await GamificationProfile.find({
+      dailyPoints: { $gt: 0 }
+    })
+      .populate("userId", "name email")
+      .sort({ dailyPoints: -1 })
+      .limit(10);
+
+    res.json(leaderboard);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch leaderboard" });
+  }
+};
+
+/**
+ * RESET
+ */
 export const resetGamification = async (req, res) => {
   try {
     const userId = req.user.id;
 
     await GamificationProfile.findOneAndUpdate(
       { userId },
-      { points: 0, level: 1, badges: [] }
+      { points: 0, dailyPoints: 0, level: 1, badges: [] }
     );
 
     res.json({ message: "Gamification reset" });

@@ -1,11 +1,18 @@
 import DailyHealthLog from "../models/DailyHealthLog.js";
 import { generateAISummary } from "../services/aiService.js";
 
+const cleanAIJson = (text) => {
+  return text
+    .replace(/```json/g, "")
+    .replace(/```/g, "")
+    .trim();
+};
+
 export const getAISummary = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // 1️⃣ Fetch last 7 days data
+    // 1️⃣ Fetch last 7 days
     const logs = await DailyHealthLog.find({ userId })
       .sort({ date: -1 })
       .limit(7);
@@ -15,17 +22,20 @@ export const getAISummary = async (req, res) => {
         Math.max(logs.length, 1)
     );
 
-    const avgSleep =
-      logs.reduce((sum, d) => sum + (d.sleepHours || 0), 0) /
-      Math.max(logs.length, 1);
+    const avgSleep = Number(
+      (
+        logs.reduce((sum, d) => sum + (d.sleep?.duration || 0), 0) /
+        Math.max(logs.length, 1)
+      ).toFixed(1)
+    );
 
-    // 2️⃣ Smart Prompt (frontend-driven)
+    // 2️⃣ Prompt
     const prompt = `
 User health data (last 7 days):
 - Average steps per day: ${avgSteps}
 - Average sleep hours: ${avgSleep}
 
-Generate STRICT JSON in this format ONLY:
+Return ONLY valid JSON. No markdown. No explanations.
 
 {
   "summaryText": "2 line weekly health summary",
@@ -39,21 +49,23 @@ Generate STRICT JSON in this format ONLY:
 }
 `;
 
-    // 3️⃣ Call Groq AI
-    const aiText = await generateAISummary(prompt);
+    // 3️⃣ Call AI
+    const aiRaw = await generateAISummary(prompt);
 
-    // 4️⃣ Parse AI JSON safely
+    // 4️⃣ Clean + Parse
     let aiData;
     try {
-      aiData = JSON.parse(aiText);
+      const cleaned = cleanAIJson(aiRaw);
+      aiData = JSON.parse(cleaned);
     } catch (err) {
+      console.error("AI RAW RESPONSE:", aiRaw);
       return res.status(500).json({
         error: "AI returned invalid JSON",
-        raw: aiText
+        raw: aiRaw
       });
     }
 
-    // 5️⃣ Send UI‑READY response
+    // 5️⃣ UI-ready response
     res.json({
       weeklyPulse: {
         summaryText: aiData.summaryText,
@@ -61,13 +73,14 @@ Generate STRICT JSON in this format ONLY:
         updatedAt: new Date().toISOString()
       },
       keyInsights: {
-        sleepChange: "+2hrs",
         steps: avgSteps,
+        avgSleep,
         status: aiData.status,
         trend: aiData.trend
       },
       recommendations: aiData.recommendations
     });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "AI summary failed" });

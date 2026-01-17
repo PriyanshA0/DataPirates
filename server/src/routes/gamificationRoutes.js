@@ -2,7 +2,8 @@ import express from "express";
 import {
   getGamificationProfile,
   syncGamification,
-  resetGamification
+  resetGamification,
+  getTodayLeaderboard
 } from "../controllers/gamificationController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
@@ -19,5 +20,8 @@ router.post("/sync", syncGamification);
 
 // 3️⃣ Reset (dev only)
 router.post("/reset", resetGamification);
+
+router.get("/leaderboard/today", authMiddleware, getTodayLeaderboard);
+
 
 export default router;
