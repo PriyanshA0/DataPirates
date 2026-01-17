@@ -5,6 +5,41 @@ import DailyHealthLog from "../models/DailyHealthLog.js";
 import Activity from "../models/Activity.js";
 import { ensureValidStravaToken } from "../utils/refreshStravaToken.js";
 
+// stravaController.js
+
+// 👇 put it at the TOP of the file
+const estimateSleep = (activitiesForDate) => {
+  if (!activitiesForDate.length) {
+    return { duration: 7, quality: "average" };
+  }
+
+  activitiesForDate.sort(
+    (a, b) => new Date(a.start_date) - new Date(b.start_date)
+  );
+
+  const lastActivity = activitiesForDate[activitiesForDate.length - 1];
+
+  const lastEnd =
+    new Date(lastActivity.start_date).getTime() +
+    lastActivity.moving_time * 1000;
+
+  const nextMorning = new Date(lastActivity.start_date);
+  nextMorning.setDate(nextMorning.getDate() + 1);
+  nextMorning.setHours(6, 0, 0, 0);
+
+  const sleepMs = nextMorning.getTime() - lastEnd;
+  const duration = Math.max(4, Math.min(9, sleepMs / 3600000));
+
+  let quality = "average";
+  if (duration >= 7.5) quality = "good";
+  if (duration < 6) quality = "poor";
+
+  return {
+    duration: Number(duration.toFixed(1)),
+    quality
+  };
+};
+
 
 export const connectStrava = (req, res) => {
     // console.log(req.user.id);
@@ -200,11 +235,19 @@ export const syncStravaActivities = async (req, res) => {
     console.log(activities);
     
     const dailyMap = {};
+    const activitiesByDate = {};
+
 
     for (const act of activities) {
       const date = act.start_date_local.split("T")[0];
       const durationMin = act.moving_time / 60;
       const distanceKm = act.distance ? act.distance / 1000 : 0;
+
+       if (!activitiesByDate[date]) {
+            activitiesByDate[date] = [];
+        }
+
+        activitiesByDate[date].push(act);
 
       let MET = 3;
       if (act.type === "Run") MET = 8;
@@ -261,15 +304,19 @@ export const syncStravaActivities = async (req, res) => {
     // Save DailyHealthLog
     for (const date in dailyMap) {
       const d = dailyMap[date];
-
+        const sleep = estimateSleep(activitiesByDate[date] || []);
       await DailyHealthLog.findOneAndUpdate(
         { userId: user._id, date },
         {
           steps: d.steps,
           distance: Number(d.distance.toFixed(2)),
           caloriesBurned: d.caloriesBurned,
-          avgHeartRate:
+          heartRateAvg:
             d.hrCount > 0 ? Math.round(d.hrSum / d.hrCount) : null,
+            sleep: {
+        duration: sleep.duration,
+        quality: sleep.quality
+      },
           source: "strava",
         },
         { upsert: true }
