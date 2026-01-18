@@ -1,4 +1,4 @@
-# 🏥 SwasthSetu - Comprehensive Health & Fitness Tracking Platform
+# 🏥 Swasth-Setu - Comprehensive Health & Fitness Tracking Platform
 
 > A full-stack mobile application for health monitoring, fitness tracking, and AI-powered wellness insights.
 
