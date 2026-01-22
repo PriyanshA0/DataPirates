@@ -84,7 +84,7 @@ class HealthHistoryScreen extends StatefulWidget {
 }
 
 class _HealthHistoryScreenState extends State<HealthHistoryScreen> {
-  int _selectedIndex = 3; // History tab
+  final int _selectedIndex = 3; // History tab
   int _selectedMonthIndex = 0;
   bool _isLoading = true;
   bool _isOffline = false;
@@ -391,7 +391,7 @@ class _HealthHistoryScreenState extends State<HealthHistoryScreen> {
                               padding: const EdgeInsets.only(bottom: 16),
                               child: _buildHistoryCard(entry.value, isDark),
                             );
-                          }).toList(),
+                          }),
                           const SizedBox(height: 8),
                           _buildLoadOlderButton(isDark),
                           const SizedBox(height: 24),
@@ -791,7 +791,7 @@ class _HealthHistoryScreenState extends State<HealthHistoryScreen> {
                           iconColor: const Color(0xFF6366F1),
                           label: _translate('steps'),
                           value:
-                              '${steps.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
+                              steps.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},'),
                           isDark: isDark,
                         ),
                       ),
@@ -871,7 +871,7 @@ class _HealthHistoryScreenState extends State<HealthHistoryScreen> {
                                 ],
                               ),
                             );
-                          }).toList(),
+                          }),
                         ],
                       ),
                     ),

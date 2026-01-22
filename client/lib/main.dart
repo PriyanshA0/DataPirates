@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter/rendering.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'screens/splash_screen.dart';
@@ -22,12 +21,31 @@ Future<void> main() async {
   // Required for the Dashboard's date formatting
   await initializeDateFormatting();
 
-  // Initialize notifications
-  await NotificationService.initialize();
-  await NotificationService.requestPermissions();
-
-  // Schedule daily evening health check reminder (8 PM)
-  await NotificationService.scheduleEveningHealthCheck();
+  // Initialize notifications with timeout to prevent hang on cold start
+  try {
+    await NotificationService.initialize().timeout(
+      const Duration(seconds: 5),
+      onTimeout: () {
+        print('Notification init timeout - continuing...');
+      },
+    );
+    await NotificationService.requestPermissions().timeout(
+      const Duration(seconds: 3),
+      onTimeout: () {
+        print('Permission request timeout - continuing...');
+        return false;
+      },
+    );
+    // Schedule daily evening health check reminder (8 PM)
+    await NotificationService.scheduleEveningHealthCheck().timeout(
+      const Duration(seconds: 3),
+      onTimeout: () {
+        print('Schedule timeout - continuing...');
+      },
+    );
+  } catch (e) {
+    print('Notification initialization error: $e');
+  }
 
   runApp(const SwasthSetuApp());
 }

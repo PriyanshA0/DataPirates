@@ -85,7 +85,7 @@ class PersonalDataScreen extends StatefulWidget {
 }
 
 class _PersonalDataScreenState extends State<PersonalDataScreen> {
-  int _selectedIndex = 4; // Profile tab
+  final int _selectedIndex = 4; // Profile tab
   bool _isLoading = true;
   bool _isSaving = false;
 

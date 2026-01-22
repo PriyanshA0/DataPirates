@@ -3,6 +3,9 @@ import dotenv from "dotenv"
 import cors from "cors"
 import cookieParser from "cookie-parser";
 
+// Load environment variables FIRST before any other imports
+dotenv.config();
+
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js"
 import healthRoutes from "./routes/healthRoutes.js"
@@ -16,7 +19,6 @@ import stravaRoutes from "./routes/stravaRoutes.js";
 import aiRoutes from "./routes/aiRoutes.js";
 import historyRoutes from "./routes/historyRoutes.js";
 
-dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
@@ -51,7 +53,6 @@ app.use("/api/strava", stravaRoutes);
 app.use("/api/ai", aiRoutes);
 
 app.use("/api/history", historyRoutes);
-
 
 
 

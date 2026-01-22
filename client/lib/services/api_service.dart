@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   // Base URL for the API (includes /api prefix for Render deployment)
-  static const String baseUrl = "https://datapirates.onrender.com/api";
+  static const String baseUrl = "http://192.168.0.211:4000/api";
 
   // Helper to get stored token and format for Node.js cookie middleware
   static Future<Map<String, String>> _getHeaders() async {

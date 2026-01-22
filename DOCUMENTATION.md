@@ -244,6 +244,35 @@ Health Score = (Steps/StepsGoal × 40) + (Sleep/SleepGoal × 30) + (Distance/Dis
 | Hindi | hi |
 | Marathi | mr |
 
+### 8. AI Food Scanner 📷 (NEW!)
+
+**AI-Powered Calorie Estimation from Food Photos:**
+- Take a photo or select from gallery
+- Google Gemini Vision AI identifies food items
+- Instant calorie and macronutrient breakdown
+- Health score for the meal (1-10)
+- Dietary warnings and health tips
+
+**Response Data:**
+```json
+{
+  "foodItems": [
+    {
+      "name": "Grilled Chicken Breast",
+      "portion": "150g",
+      "calories": 248,
+      "protein": 46,
+      "carbs": 0,
+      "fat": 5
+    }
+  ],
+  "totalCalories": 248,
+  "healthScore": 8,
+  "mealType": "lunch",
+  "healthTip": "Great protein source!"
+}
+```
+
 ---
 
 ## 🗄️ Database Schema

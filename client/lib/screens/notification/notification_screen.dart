@@ -89,7 +89,7 @@ class NotificationSettingsScreen extends StatefulWidget {
 
 class _NotificationSettingsScreenState
     extends State<NotificationSettingsScreen> {
-  int _selectedIndex = 4; // Profile tab
+  final int _selectedIndex = 4; // Profile tab
   bool _lowActivity = true;
   bool _highHeartRate = true;
   bool _abnormalSleep = true;

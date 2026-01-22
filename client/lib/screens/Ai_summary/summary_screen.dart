@@ -223,7 +223,7 @@ class _AISummaryScreenState extends State<AISummaryScreen> {
     String summary = 'आपका साप्ताहिक स्वास्थ्य सारांश। ';
 
     if (_sleepChange.isNotEmpty) {
-      summary += 'नींद में ${_sleepChange} का बदलाव। ';
+      summary += 'नींद में $_sleepChange का बदलाव। ';
     }
     if (_steps > 0) {
       summary += 'आपने $_steps कदम चले। ';
@@ -257,7 +257,7 @@ class _AISummaryScreenState extends State<AISummaryScreen> {
     String summary = 'तुमचा साप्ताहिक आरोग्य सारांश। ';
 
     if (_sleepChange.isNotEmpty) {
-      summary += 'झोपेत ${_sleepChange} बदल। ';
+      summary += 'झोपेत $_sleepChange बदल। ';
     }
     if (_steps > 0) {
       summary += 'तुम्ही $_steps पावले चाललात। ';
@@ -1535,7 +1535,7 @@ class _AISummaryScreenState extends State<AISummaryScreen> {
 
   Widget _buildRecommendationsSection(bool isDark) {
     // Default icons for recommendations based on keywords
-    IconData _getIconForTitle(String title) {
+    IconData getIconForTitle(String title) {
       final lowerTitle = title.toLowerCase();
       if (lowerTitle.contains('walk') ||
           lowerTitle.contains('cardio') ||
@@ -1567,7 +1567,7 @@ class _AISummaryScreenState extends State<AISummaryScreen> {
       return Icons.lightbulb;
     }
 
-    Color _getColorForIndex(int index) {
+    Color getColorForIndex(int index) {
       final colors = [
         const Color(0xFF3B82F6),
         const Color(0xFF8B5CF6),
@@ -1618,11 +1618,11 @@ class _AISummaryScreenState extends State<AISummaryScreen> {
         ] else ...[
           for (int i = 0; i < _recommendations.length; i++) ...[
             _buildRecommendationCard(
-              icon: _getIconForTitle(_recommendations[i]['title'] ?? ''),
-              iconColor: _getColorForIndex(i),
+              icon: getIconForTitle(_recommendations[i]['title'] ?? ''),
+              iconColor: getColorForIndex(i),
               iconBgColor: isDark
-                  ? _getColorForIndex(i).withOpacity(0.2)
-                  : _getColorForIndex(i).withOpacity(0.1),
+                  ? getColorForIndex(i).withOpacity(0.2)
+                  : getColorForIndex(i).withOpacity(0.1),
               title: _recommendations[i]['title'] ?? '',
               description: _recommendations[i]['description'] ?? '',
               isDark: isDark,

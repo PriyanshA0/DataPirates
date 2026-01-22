@@ -14,6 +14,7 @@ class _HealthTrackerSplashScreenState extends State<HealthTrackerSplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
+  bool _hasNavigated = false;
 
   @override
   void initState() {
@@ -30,25 +31,35 @@ class _HealthTrackerSplashScreenState extends State<HealthTrackerSplashScreen>
   }
 
   Future<void> _checkLoginAndNavigate() async {
-    // Wait for splash animation to show
-    await Future.delayed(const Duration(seconds: 3));
+    // Wait for splash animation to show (reduced from 3s to 2s)
+    await Future.delayed(const Duration(seconds: 2));
 
-    if (!mounted) return;
+    if (!mounted || _hasNavigated) return;
 
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await SharedPreferences.getInstance().timeout(
+        const Duration(seconds: 3),
+        onTimeout: () => throw Exception('SharedPreferences timeout'),
+      );
       final bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+      final String? token = prefs.getString('token');
 
-      if (!mounted) return;
+      if (!mounted || _hasNavigated) return;
+      _hasNavigated = true;
 
-      if (isLoggedIn) {
+      // Check both isLoggedIn flag AND token exists
+      if (isLoggedIn && token != null && token.isNotEmpty) {
         Navigator.pushReplacementNamed(context, '/dashboard');
       } else {
+        // Clear any stale login state
+        await prefs.setBool('isLoggedIn', false);
         Navigator.pushReplacementNamed(context, '/register');
       }
     } catch (e) {
+      print('Splash navigation error: $e');
       // If any error, go to register screen
-      if (mounted) {
+      if (mounted && !_hasNavigated) {
+        _hasNavigated = true;
         Navigator.pushReplacementNamed(context, '/register');
       }
     }

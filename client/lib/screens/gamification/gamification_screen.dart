@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../services/gamification_service.dart';
 
 class GamificationScreen extends StatefulWidget {
@@ -910,7 +911,29 @@ class _GamificationScreenState extends State<GamificationScreen>
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () {
+                        final text =
+                            '🎮 My SwasthSetu Progress\n\n'
+                            '🏆 Level $_level\n'
+                            '⭐ $_points Total XP\n'
+                            '💪 $_dailyPoints XP Today\n'
+                            '🎖️ ${_badges.length} Badges Earned\n\n'
+                            'Join me on SwasthSetu and start your health journey! 💪';
+                        Clipboard.setData(ClipboardData(text: text));
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text(
+                              'Progress copied to clipboard!',
+                            ),
+                            backgroundColor: const Color(0xFF45A191),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        );
+                      },
                       icon: const Icon(Icons.copy),
                       label: const Text('Copy'),
                       style: OutlinedButton.styleFrom(
@@ -926,7 +949,17 @@ class _GamificationScreenState extends State<GamificationScreen>
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () {
+                        final text =
+                            '🎮 My SwasthSetu Progress\n\n'
+                            '🏆 Level $_level\n'
+                            '⭐ $_points Total XP\n'
+                            '💪 $_dailyPoints XP Today\n'
+                            '🎖️ ${_badges.length} Badges Earned\n\n'
+                            'Join me on SwasthSetu and start your health journey! 💪';
+                        Navigator.pop(context);
+                        Share.share(text, subject: 'My SwasthSetu Progress');
+                      },
                       icon: const Icon(Icons.share),
                       label: const Text('Share'),
                       style: ElevatedButton.styleFrom(

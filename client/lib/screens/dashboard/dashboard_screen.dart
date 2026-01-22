@@ -1337,17 +1337,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(width: 12),
               PopupMenuButton<String>(
-                child: _buildHeaderButton(
-                  icon: Icons.language,
-                  isDark: isDark,
-                  onTap: null,
-                ),
                 onSelected: widget.onLanguageChange,
                 itemBuilder: (context) => [
                   'English',
                   'Hindi',
                   'Marathi',
                 ].map((l) => PopupMenuItem(value: l, child: Text(l))).toList(),
+                child: _buildHeaderButton(
+                  icon: Icons.language,
+                  isDark: isDark,
+                  onTap: null,
+                ),
               ),
               const SizedBox(width: 12),
               _buildHeaderButton(
@@ -1885,7 +1885,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ChartType.heartbeat,
           dataValue: _heartRate / 100,
           chartLabel: _heartRate > 0
-              ? '${_heartRate < 60 ? "Low" : (_heartRate > 100 ? "High" : "Normal")}'
+              ? _heartRate < 60 ? "Low" : (_heartRate > 100 ? "High" : "Normal")
               : '--',
         ),
       ],

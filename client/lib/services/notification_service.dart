@@ -283,7 +283,7 @@ class NotificationService {
     await _notifications.show(
       lowActivityId,
       '🚶 Low Activity Alert',
-      'You\'ve only taken $steps steps today. Try to get ${remaining} more steps to stay healthy!',
+      'You\'ve only taken $steps steps today. Try to get $remaining more steps to stay healthy!',
       details,
       payload: 'low_activity',
     );

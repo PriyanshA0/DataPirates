@@ -85,7 +85,7 @@ class AppSettingsScreen extends StatefulWidget {
 }
 
 class _AppSettingsScreenState extends State<AppSettingsScreen> {
-  int _selectedIndex = 4; // Profile tab
+  final int _selectedIndex = 4; // Profile tab
 
   final Map<String, Map<String, String>> _translations = {
     'English': {
